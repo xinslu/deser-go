@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 type deserialized map[string]interface{}
@@ -15,13 +16,11 @@ type string_serialized struct {
 }
 
 func main() {
-	input := "{ \"hello\" : -1 , \"bruh\" : \"here\", \"objectbruh\" : {\"here\": -1.01, \"objectbruh\" : {\"here\": 1 } } }"
+	input := "{ \"hello\" : -1 , \"bruh\" : \"here\", \"objectbruh\" : {\"here\": -1.01, \"objectbruh\" : {\"here\": false } } }"
 	fmt.Println(deserialize(input))
 }
 
 func deserialize(json string) deserialized {
-	json = strings.Replace(json, " : ", ":", -1)
-	json = strings.Replace(json, " }", "}", -1)
 	serialized := new(string_serialized)
 	serialized.input = json
 	serialized.current = 0
@@ -47,6 +46,23 @@ func (self *string_serialized) parse() interface{} {
 		if self.compare_contains("0123456789+-.e") {
 			return self.parse_numbers()
 		}
+		result := self.get_string()
+		if result != "" {
+			resultlen := len(result)
+			if result == "false" {
+				self.current += resultlen
+				return false
+			} else if result == "true" {
+				self.current += resultlen
+				return true
+			} else if result == "null" {
+				self.current += resultlen
+				return nil
+			} else {
+				panic("ERROR: Invalid string literal")
+			}
+		}
+		panic("ERROR: Invalid value")
 	}
 	return nil
 }
@@ -120,6 +136,16 @@ func (self *string_serialized) parse_numbers() interface{} {
 		panic("ERROR: Cannot process integer")
 	}
 	return result
+}
+
+func (self *string_serialized) get_string() string {
+	current := self.current
+	result := new(string)
+	for unicode.IsLetter(rune(self.input[current])) {
+		*result += string(self.input[current])
+		current++
+	}
+	return *result
 }
 
 func (self *string_serialized) match(match string) {
