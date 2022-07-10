@@ -14,7 +14,7 @@ type string_serialized struct {
 }
 
 func main() {
-	input := "{ \"hello\" : 1 , \"bruh\" : 2, \"objectbruh\" : {\"here\": 1 } }"
+	input := "{ \"hello\" : 1 , \"bruh\" : \"here\", \"objectbruh\" : {\"here\": 1, \"objectbruh\" : {\"here\": 1 } } }"
 	fmt.Println(deserialize(input))
 }
 
