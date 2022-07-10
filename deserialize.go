@@ -15,7 +15,7 @@ type string_serialized struct {
 
 func main() {
 	input := "{ \"hello\" : 1 , \"bruh\" : 2, \"objectbruh\" : {\"here\": 1 } }"
-	fmt.Print(deserialize(input))
+	fmt.Println(deserialize(input))
 }
 
 func deserialize(json string) deserialized {
@@ -26,9 +26,7 @@ func deserialize(json string) deserialized {
 	serialized.current = 0
 	serialized.deserialize = make(deserialized)
 	serialized.cleanup()
-	fmt.Println(serialized.input)
-	fmt.Println("here")
-	serialized.parse_object()
+	serialized.deserialize = serialized.parse_object()
 	return serialized.deserialize
 }
 
@@ -37,7 +35,7 @@ func (self *string_serialized) parse() interface{} {
 	case "{":
 		new_self := self
 		new_self.deserialize = make(deserialized)
-		return self.parse_object()
+		return new_self.parse_object()
 	case "\"":
 		return self.parse_string()
 	case ",":
@@ -54,22 +52,16 @@ func (self *string_serialized) parse() interface{} {
 
 func (self *string_serialized) parse_object() deserialized {
 	field := new(string)
+	result := make(deserialized)
 	for {
-		fmt.Println(string(self.input[self.current]))
 		switch string(self.input[self.current]) {
 		case "{":
 			self.current++
 		case "\"":
-			fmt.Print("here")
-			fmt.Print(self.deserialize)
 			*field = self.parse_string()
-			fmt.Println(*field)
 		case ":":
-			fmt.Println("here1" + *field)
 			self.current++
-			fmt.Println("here2" + string(self.input[self.current]))
-			self.deserialize[*field] = self.parse()
-			fmt.Println(self.deserialize)
+			result[*field] = self.parse()
 		case ",":
 			self.current++
 		case "}":
@@ -79,7 +71,7 @@ func (self *string_serialized) parse_object() deserialized {
 			break
 		}
 	}
-	return self.deserialize
+	return result
 }
 
 func (self *string_serialized) cleanup() {
