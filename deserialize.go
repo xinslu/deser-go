@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -14,7 +15,7 @@ type string_serialized struct {
 }
 
 func main() {
-	input := "{ \"hello\" : 1 , \"bruh\" : \"here\", \"objectbruh\" : {\"here\": 1, \"objectbruh\" : {\"here\": 1 } } }"
+	input := "{ \"hello\" : -1 , \"bruh\" : \"here\", \"objectbruh\" : {\"here\": -1.01, \"objectbruh\" : {\"here\": 1 } } }"
 	fmt.Println(deserialize(input))
 }
 
@@ -43,8 +44,8 @@ func (self *string_serialized) parse() interface{} {
 	case "}":
 		break
 	default:
-		if self.compare_contains("123456789") {
-			return self.parse_integer()
+		if self.compare_contains("0123456789+-.e") {
+			return self.parse_numbers()
 		}
 	}
 	return nil
@@ -97,20 +98,35 @@ func (self *string_serialized) parse_string() string {
 	return *string_object
 }
 
-func (self *string_serialized) parse_integer() int {
-	int_object := new(int)
-	for self.compare_contains("123456789") {
-		*int_object = *int_object*10 + (int(self.input[self.current]) - 48)
+func (self *string_serialized) parse_numbers() interface{} {
+	int_object := new(string)
+	isFloat := false
+	for self.compare_contains("0123456789+-.e") {
+		*int_object += string(self.input[self.current])
+		if string(self.input[self.current]) == "." {
+			isFloat = true
+		}
 		self.current++
 	}
-	return *int_object
+	if isFloat {
+		result, err := strconv.ParseFloat(*int_object, 64)
+		if err != nil {
+			panic("ERROR: Cannot process flaot")
+		}
+		return result
+	}
+	result, err := strconv.Atoi(*int_object)
+	if err != nil {
+		panic("ERROR: Cannot process integer")
+	}
+	return result
 }
 
 func (self *string_serialized) match(match string) {
 	if string(self.input[self.current]) == match {
 		self.current++
 	} else {
-		panic("Expected a string")
+		panic("ERROR: Expected a string")
 	}
 }
 
