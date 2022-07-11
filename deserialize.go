@@ -16,7 +16,7 @@ type string_serialized struct {
 }
 
 func main() {
-	input := "{ \"hello\" : -1 , \"bruh\" : \"here\", \"objectbruh\" : {\"here\": -1.01, \"objectbruh\" : {\"here\": false } } }"
+	input := "{ \"hello\" : -1 , \"bruh\" : \"here\", \"objectbruh\" : {\"here\": -1.01, \"objectbruh\" : {\"here\": false, \"second\": [1,2,3,\"here\"]} } }"
 	fmt.Println(deserialize(input))
 }
 
@@ -42,6 +42,8 @@ func (self *string_serialized) parse() interface{} {
 		self.current++
 	case "}":
 		break
+	case "[":
+		return self.parse_array()
 	default:
 		if self.compare_contains("0123456789+-.e") {
 			return self.parse_numbers()
@@ -62,7 +64,7 @@ func (self *string_serialized) parse() interface{} {
 				panic("ERROR: Invalid string literal")
 			}
 		}
-		panic("ERROR: Invalid value")
+		panic("ERROR: Invalid value " + string(self.input[self.current]))
 	}
 	return nil
 }
@@ -91,16 +93,32 @@ func (self *string_serialized) parse_object() deserialized {
 	return result
 }
 
-func (self *string_serialized) cleanup() {
-	self.input = strings.Replace(self.input, "\n", "", -1)
-	self.input = strings.Replace(self.input, " : ", ":", -1)
-	self.input = strings.Replace(self.input, ": ", ":", -1)
-	self.input = strings.Replace(self.input, " , ", ",", -1)
-	self.input = strings.Replace(self.input, ", ", ",", -1)
-	self.input = strings.Replace(self.input, " } ", "}", -1)
-	self.input = strings.Replace(self.input, " }", "}", -1)
-	self.input = strings.Replace(self.input, " { ", "{", -1)
-	self.input = strings.Replace(self.input, "{ ", "{", -1)
+func (self *string_serialized) parse_array() []interface{} {
+	result := make([]interface{}, 0)
+	for {
+		fmt.Println(string(self.input[self.current]))
+		switch string(self.input[self.current]) {
+		case "[":
+			self.current++
+		case "{":
+			result = append(result, self.parse_object())
+		case ",":
+			self.current++
+		case "]":
+			break
+		default:
+			fmt.Println("char " + string(self.input[self.current]))
+			result = append(result, self.parse())
+			fmt.Println("char " + string(self.input[self.current]))
+			fmt.Println(result...)
+		}
+		if self.compare("]") {
+			fmt.Println("here" + string(self.input[self.current]))
+			self.current++
+			break
+		}
+	}
+	return result
 }
 
 func (self *string_serialized) parse_string() string {
@@ -162,4 +180,16 @@ func (self *string_serialized) compare_contains(match string) bool {
 
 func (self *string_serialized) compare(match string) bool {
 	return string(self.input[self.current]) == match
+}
+
+func (self *string_serialized) cleanup() {
+	self.input = strings.Replace(self.input, "\n", "", -1)
+	self.input = strings.Replace(self.input, " : ", ":", -1)
+	self.input = strings.Replace(self.input, ": ", ":", -1)
+	self.input = strings.Replace(self.input, " , ", ",", -1)
+	self.input = strings.Replace(self.input, ", ", ",", -1)
+	self.input = strings.Replace(self.input, " } ", "}", -1)
+	self.input = strings.Replace(self.input, " }", "}", -1)
+	self.input = strings.Replace(self.input, " { ", "{", -1)
+	self.input = strings.Replace(self.input, "{ ", "{", -1)
 }
