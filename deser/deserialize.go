@@ -1,4 +1,4 @@
-package main
+package deser
 
 import (
 	"fmt"
@@ -13,11 +13,6 @@ type string_serialized struct {
 	input       string
 	current     int
 	deserialize deserialized
-}
-
-func main() {
-	input := "{ \"hello\" : -1 , \"bruh\" : \"here\", \"objectbruh\" : {\"here\": -1.01, \"objectbruh\" : {\"here\": false, \"second\": [1,2,3,\"here\"]} } }"
-	fmt.Println(deserialize(input))
 }
 
 func deserialize(json string) deserialized {
